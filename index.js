@@ -31,8 +31,6 @@ websocket.on('request', (request) => {
     const result = JSON.parse(message.utf8Data);
     // message received from client
 
-    // console.log(result)
-
     // client attempting to send a chat msg
     if (result.method == 'chat') {
       const msg = result.msg;
@@ -94,8 +92,6 @@ websocket.on('request', (request) => {
 
       const con = clients[clientId].connection;
       con.send(JSON.stringify(payLoad))
-
-      console.log(games)
     }
 
     // client attempting to join a game
@@ -106,7 +102,6 @@ websocket.on('request', (request) => {
       const game = games[gameId];
 
       if (!game) {
-        console.log("No game ID.")
         const payLoad = {
           method: 'error',
           message: 'Game ID is invalid.'
@@ -130,28 +125,36 @@ websocket.on('request', (request) => {
 
     if (result.method == 'join-random') {
       var gameId = null;
-      console.log(`${result.username} is attempting to join a random game`)
-      // select game from games and send gameId back?
-      // getRandomGame()
+      let game = null;
+      let payLoad = null;
+
+      // if there are existing games, randomly choose one
       if (Object.keys(games).length > 0) {
-        let rand = Math.random() * games.size()
-        print(`games: ${games}, rand: ${rand}`)
+        var keys = Object.keys(games);
+        game = games[keys[ keys.length * Math.random() << 0]];
+        gameId = game.id;
+
+        game?.clients?.push({
+          clientId,
+        })
+
+        messages[gameId] = [];
+
+        payLoad = {
+          method: 'join-random',
+          game: game,
+        }
+        
+      // no games exist
       } else {
-        gameId = guid()
-        games[gameId] = {
-          id: gameId,
-          clients: []
-        };
+        payLoad = {
+          method: 'error',
+          message: 'No games are currently running. Create one instead.'
+        }
       }
       
-      const payLoad = {
-        method: 'join-random',
-        game: games[gameId]
-      }
       const con = clients[clientId].connection;
       con.send(JSON.stringify(payLoad))
-
-      console.log(games)
     }
     
   });

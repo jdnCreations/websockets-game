@@ -90,6 +90,7 @@ btnRandom.addEventListener('click', e => {
 ws.onmessage = (message) => {
     // message data
     const response = JSON.parse(message.data);
+    console.log(response)
     // connect
     if (response.method === 'connect') {
         clientId = response.clientId;
@@ -97,7 +98,9 @@ ws.onmessage = (message) => {
 
     // receive message
     if (response.method === 'chat') {
+        console.log('msgs received?')
         messages = response.messages;
+        console.log(messages)
 
         // remove previous chat messages
         for (let i = 0; i < chat.children.length; i++) {
@@ -135,8 +138,9 @@ ws.onmessage = (message) => {
     }
 
     if (response.method === 'join-random') {
-        console.log(`Game: ${response.game.id}`)
-        txtCurrGameId.innerText = `Current Game ID: ${response.game.id}`;
+        console.log(response.game)
+        gameId = response?.game?.id;
+        txtCurrGameId.innerText = `Current Game ID: ${gameId}`;
     }
 }
 
