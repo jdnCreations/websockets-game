@@ -1,0 +1,27 @@
+* {
+    outline: none;
+}
+
+#ui {
+    display: flex;
+    flex-direction: column;
+    width: 800px;
+    row-gap: 8px;
+}
+
+#name {
+    flex-direction: column;
+}
+
+#ui button {
+    width: 180px;
+    height: 60px;
+}
+
+.text-input-error {
+    border: 2px solid red;
+}
+
+h1 {
+    color: rebeccapurple;
+}

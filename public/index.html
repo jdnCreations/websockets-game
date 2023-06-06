@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Game</title>
+    <link rel="stylesheet" href="./client.css" type="text/css">
+  </head>
+  <body>
+    <div id="ui">
+      <p id="error"></p>
+      <div id="name">
+        <label for="playerName">Username</label>
+        <input type="text" id="playerName" />
+        <p id="name-error"></p>
+      </div>
+      <div id="colour">
+        <label for="palyerCo">Player Colour</label>
+        <input type="color" id="playerColour" />
+      </div>
+      <div id="gameId">
+        <label for="txtGameId">Game ID</label>
+        <input type="text" id="txtGameId">
+        <p id="gameId-error"></p>
+      </div>
+      <div id="join-btn">
+        <button id="btnCreate">Create Game</button>
+        <button id="btnJoin" >Join Game</button>
+        <button id="btnRandom">Join Random Game</button>
+      </div>
+      <p id="txtCurrGameId"></p>
+
+      <label for="txtChat">Message</label>
+      <input id="txtChat" type="text">
+      <button id="btnChat">Send</button>
+      <p id="chat"></p>
+    </div>
+    
+    <canvas id="canvas" width="600px" height="600px">
+      
+    </canvas>
+    <script src="/client.js"></script>
+
+  </body>
+</html>
