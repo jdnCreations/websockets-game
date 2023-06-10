@@ -4,7 +4,7 @@
 
 #ui {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     width: 800px;
     row-gap: 8px;
 }
@@ -24,4 +24,14 @@
 
 h1 {
     color: rebeccapurple;
+}
+
+.message {
+    border-radius: 8px;
+    padding: 4px 24px;
+    border: 1px solid black;
+}
+
+.name {
+    font-weight: bold
 }

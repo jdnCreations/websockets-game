@@ -11,7 +11,7 @@ app.listen(8081, () => console.log('Listening on port 8081.'));
 httpServer.listen(8080, () => console.log('WS Server is listening on Port 8080.'));
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+    res.sendFile(__dirname + '/index.html');
 });
 
 // keep track of things
@@ -81,14 +81,14 @@ websocket.on('request', (request) => {
 
       const game = games[gameId]
 
+        game?.clients?.push({
+            clientId,
+        })
+
       const payLoad = {
         method: 'create',
         game: game
       }
-
-      game?.clients?.push({
-        clientId,
-      })
 
       const con = clients[clientId].connection;
       con.send(JSON.stringify(payLoad))
@@ -100,6 +100,7 @@ websocket.on('request', (request) => {
       const clientId = result.clientId;
       const gameId = result.gameId;
       const game = games[gameId];
+      const colour = result.colour;  
 
       if (!game) {
         const payLoad = {
@@ -108,7 +109,21 @@ websocket.on('request', (request) => {
         }
         return clients[clientId].connection.send(JSON.stringify(payLoad))
       }
+        console.log(game.clients);
       
+        for (let i = 0; i < game.clients.length; i++) {
+            if (game.clients[i].clientId === clientId) {
+                const payLoad = {
+                    method: 'error',
+                    message: 'You are already in this game.'
+                }
+            console.log("User is already in game.");
+
+            return clients[clientId].connection.send(JSON.stringify(payLoad));
+            }
+        }
+
+
       game?.clients?.push({
         clientId,
       })

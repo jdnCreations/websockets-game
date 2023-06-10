@@ -4,7 +4,7 @@ let gameId = null;
 let playerColour = null;
 let username = null;
 let errorText = null;
-let playersOnServer = [];
+let playersonserver = [];
 let ws = new WebSocket("ws://localhost:8080");
 
 
@@ -13,39 +13,40 @@ const txtCurrGameId = document.getElementById("txtCurrGameId")
 const btnJoin = document.getElementById("btnJoin")
 const btnRandom = document.getElementById("btnRandom")
 const btnCreate = document.getElementById("btnCreate")
-const btnChat = document.getElementById("btnChat")
+// const btnChat = document.getElementById("btnChat")
 const txtGameId = document.getElementById("txtGameId")
 const txtChat = document.getElementById("txtChat")
 const errorDisplay = document.getElementById("error");
-const chat = document.getElementById("chat")
-const playerName = document.getElementById("playerName")
+const chat = document.getElementById("chat");
+const playerName = document.getElementById("playerName");
+const playerColourInput = document.getElementById("playerColour");
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext("2d");
-canvas.style.border = "1px solid black"
+canvas.style.border = "1px solid black";
 
 // event listeners
 
-txtGameId.addEventListener("keydown", e => {
+txtGameId.addEventListener("keydown", () => {
     if (txtGameId.classList.contains("text-input-error"))
         txtGameId.classList.remove("text-input-error")
 })
 
-btnChat.addEventListener('click', e => {
-    let chatMsg = txtChat.value;
-    username = playerName.value;
+// btnchat.addEventListener('click', () => {
+//     let chatMsg = txtChat.value;
+//     username = playerName.value;
+// 
+//     const payLoad = {
+//         method: 'chat',
+//         msg: chatMsg,
+//         clientId: clientId,
+//         gameId: gameId,
+//         username: username
+//     }
+// 
+//     ws.send(JSON.stringify(payLoad))
+// })
 
-    const payLoad = {
-        method: 'chat',
-        msg: chatMsg,
-        clientId: clientId,
-        gameId: gameId,
-        username: username
-    }
-
-    ws.send(JSON.stringify(payLoad))
-})
-
-btnCreate.addEventListener('click', e => {
+btnCreate.addEventListener('click', () => {
     const payLoad = {
         method: 'create',
         clientId: clientId
@@ -55,7 +56,7 @@ btnCreate.addEventListener('click', e => {
 })
 
 
-btnJoin.addEventListener('click', e => {
+btnJoin.addEventListener('click', () => {
 
     if (checkInputs() == "error") {
         return;
@@ -71,6 +72,7 @@ btnJoin.addEventListener('click', e => {
         username,
         clientId,
         gameId,
+        colour: playerColour
     }
 
     ws.send(JSON.stringify(payLoad))
@@ -98,9 +100,7 @@ ws.onmessage = (message) => {
 
     // receive message
     if (response.method === 'chat') {
-        console.log('msgs received?')
         messages = response.messages;
-        console.log(messages)
 
         // remove previous chat messages
         for (let i = 0; i < chat.children.length; i++) {
@@ -113,6 +113,10 @@ ws.onmessage = (message) => {
             let newName = document.createElement('p')
             let newMsg = document.createElement('p')
 
+            newDiv.classList.add("message"); 
+            newMsg.classList.add("message-text"); 
+            newName.classList.add("name");
+            
             newName.innerText = messages[i].username;
             newMsg.innerText = messages[i].msg;
 
@@ -135,6 +139,7 @@ ws.onmessage = (message) => {
     if (response.method === 'join') {
         console.log(response.game)
         txtCurrGameId.innerText = `Current Game ID: ${gameId}`;
+        console.log(response.colour);
     }
 
     if (response.method === 'join-random') {
