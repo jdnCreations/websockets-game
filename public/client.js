@@ -5,6 +5,8 @@ let playerColour = null;
 let username = null;
 let errorText = null;
 let playersonserver = [];
+let playerPosX = null;
+let playerPosY = null;
 let ws = new WebSocket("ws://localhost:8080");
 
 
@@ -25,7 +27,6 @@ const ctx = canvas.getContext("2d");
 canvas.style.border = "1px solid black";
 
 // event listeners
-
 txtGameId.addEventListener("keydown", () => {
     if (txtGameId.classList.contains("text-input-error"))
         txtGameId.classList.remove("text-input-error")
@@ -51,13 +52,11 @@ btnCreate.addEventListener('click', () => {
         method: 'create',
         clientId: clientId
     }
-
     ws.send(JSON.stringify(payLoad))
 })
 
 
 btnJoin.addEventListener('click', () => {
-
     if (checkInputs() == "error") {
         return;
     }
@@ -74,7 +73,6 @@ btnJoin.addEventListener('click', () => {
         gameId,
         colour: playerColour
     }
-
     ws.send(JSON.stringify(payLoad))
 })
 
@@ -85,7 +83,6 @@ btnRandom.addEventListener('click', e => {
         username,
         clientId,
     }
-
     ws.send(JSON.stringify(payLoad))
 })
 
@@ -128,8 +125,10 @@ ws.onmessage = (message) => {
 
     // create game
     if (response.method === 'create') {
+        playerColour = playerColourInput.value;
         gameId = response.game.id;
         txtCurrGameId.innerText = `Current Game ID: ${gameId}`;
+        loadPlayer(playerColour);
     }
 
     if (response.method === 'error') {
@@ -140,6 +139,7 @@ ws.onmessage = (message) => {
         console.log(response.game)
         txtCurrGameId.innerText = `Current Game ID: ${gameId}`;
         console.log(response.colour);
+        loadPlayer(playerColour);
     }
 
     if (response.method === 'join-random') {
@@ -147,6 +147,22 @@ ws.onmessage = (message) => {
         gameId = response?.game?.id;
         txtCurrGameId.innerText = `Current Game ID: ${gameId}`;
     }
+}
+
+const drawPlayer = (playerColour) => {
+    const X = canvas.width / 2;
+    const Y = canvas.height / 2;
+    const radius = 45;
+
+    playerPosX = X;
+    playerPosY = Y;
+
+    ctx.lineWidth = 3;
+    ctx.fillStyle = playerColour;
+
+    ctx.beginPath();
+    ctx.arc(X, Y, radius, 0, 2 * Math.PI, false);
+    ctx.fill();
 }
 
 
@@ -167,8 +183,5 @@ const checkInputs = () => {
         }
         return "error";
     }
-
-    
 }
-
 

@@ -20,193 +20,193 @@ const games = {};
 const messages = {};
 
 const websocket = new WebSocketServer({
-  httpServer: httpServer,
+    httpServer: httpServer,
 });
 
 websocket.on('request', (request) => {
-  connection = request.accept(null, request.origin);
-  connection.on('open', () => console.log("Opened"));
-  connection.on('close', () => console.log('Closed'));
-  connection.on('message', (message) => {
-    const result = JSON.parse(message.utf8Data);
-    // message received from client
+    connection = request.accept(null, request.origin);
+    connection.on('open', () => console.log("Opened"));
+    connection.on('close', () => console.log("Closed")); 
+    connection.on('message', (message) => {
+        const result = JSON.parse(message.utf8Data);
+        // message received from client
 
-    // client attempting to send a chat msg
-    if (result.method == 'chat') {
-      const msg = result.msg;
-      const clientId = result.clientId;
-      const gameId = result.gameId;
-      const username = result.username;
-      const game = games[gameId];
+        // client attempting to send a chat msg
+        if (result.method == 'chat') {
+            const msg = result.msg;
+            const clientId = result.clientId;
+            const gameId = result.gameId;
+            const username = result.username;
+            const game = games[gameId];
 
-      // if client is not in a valid game, send error
-      if (gameId == null) {
-        const payLoad = {
-          method: "error",
-          message: "Game ID is invalid."
+            // if client is not in a valid game, send error
+            if (gameId == null) {
+                const payLoad = {
+                    method: "error",
+                    message: "Game ID is invalid."
+                }
+
+                const con = clients[clientId].connection;
+                return con.send(JSON.stringify(payLoad));
+            }
+
+            messages[gameId].push({
+                clientId: clientId,
+                msg: msg,
+                username: username,
+            })
+
+            const payLoad = {
+                method: 'chat',
+                messages: messages[gameId]
+            }
+
+            game?.clients?.forEach(c => {
+                clients[c.clientId].connection.send(JSON.stringify(payLoad))
+            })
         }
 
-        const con = clients[clientId].connection;
-        return con.send(JSON.stringify(payLoad));
-      }
+        // client attempting to create a game
+        if (result.method == 'create') {
+            const clientId = result.clientId;
+            const colour = result.colour;
+            const username = result.username;
+            const gameId = guid()
+            games[gameId] = {
+                id: gameId,
+                clients: []
+            }
 
-      messages[gameId].push({
-        clientId: clientId,
-        msg: msg,
-        username: username,
-      })
+            messages[gameId] = [];
 
-      const payLoad = {
-        method: 'chat',
-        messages: messages[gameId]
-      }
+            const game = games[gameId]
 
-      console.log(messages)
+            game?.clients?.push({
+                clientId,
+                colour,
+                username
+            })
 
-      game?.clients?.forEach(c => {
-        clients[c.clientId].connection.send(JSON.stringify(payLoad))
-      })
-    }
+            const payLoad = {
+                method: 'create',
+                game: game
+            }
 
-    // client attempting to create a game
-    if (result.method == 'create') {
-      const clientId = result.clientId;
-      const gameId = guid()
-      games[gameId] = {
-        id: gameId,
-        clients: []
-      }
-
-      messages[gameId] = [];
-
-      const game = games[gameId]
-
-        game?.clients?.push({
-            clientId,
-        })
-
-      const payLoad = {
-        method: 'create',
-        game: game
-      }
-
-      const con = clients[clientId].connection;
-      con.send(JSON.stringify(payLoad))
-    }
-
-    // client attempting to join a game
-    if (result.method == 'join') {
-      // handle join things
-      const clientId = result.clientId;
-      const gameId = result.gameId;
-      const game = games[gameId];
-      const colour = result.colour;  
-
-      if (!game) {
-        const payLoad = {
-          method: 'error',
-          message: 'Game ID is invalid.'
+            const con = clients[clientId].connection;
+            con.send(JSON.stringify(payLoad))
         }
-        return clients[clientId].connection.send(JSON.stringify(payLoad))
-      }
-        console.log(game.clients);
-      
-        for (let i = 0; i < game.clients.length; i++) {
-            if (game.clients[i].clientId === clientId) {
+
+        // client attempting to join a game
+        if (result.method == 'join') {
+            // handle join things
+            const clientId = result.clientId;
+            const gameId = result.gameId;
+            const game = games[gameId];
+            const colour = result.colour;  
+
+            if (!game) {
                 const payLoad = {
                     method: 'error',
-                    message: 'You are already in this game.'
+                    message: 'Game ID is invalid.'
                 }
-            console.log("User is already in game.");
-
-            return clients[clientId].connection.send(JSON.stringify(payLoad));
+                return clients[clientId].connection.send(JSON.stringify(payLoad))
             }
+
+            for (let i = 0; i < game.clients.length; i++) {
+                if (game.clients[i].clientId === clientId) {
+                    const payLoad = {
+                        method: 'error',
+                        message: 'You are already in this game.'
+                    }
+                    console.log("User is already in game.");
+
+                    return clients[clientId].connection.send(JSON.stringify(payLoad));
+                }
+            }
+
+            game?.clients?.push({
+                clientId,
+            })
+
+            const payLoad = {
+                method: 'join',
+                game: game
+            }
+
+            game?.clients?.forEach(c => {
+                clients[c.clientId].connection.send(JSON.stringify(payLoad))
+            })
         }
 
+        if (result.method == 'join-random') {
+            var gameId = null;
+            let game = null;
+            let payLoad = null;
 
-      game?.clients?.push({
-        clientId,
-      })
+            // if there are existing games, randomly choose one
+            if (Object.keys(games).length > 0) {
+                var keys = Object.keys(games);
+                game = games[keys[ keys.length * Math.random() << 0]];
+                gameId = game.id;
 
-      const payLoad = {
-        method: 'join',
-        game: game
-      }
+                game?.clients?.push({
+                    clientId,
+                })
 
-      game?.clients?.forEach(c => {
-        clients[c.clientId].connection.send(JSON.stringify(payLoad))
-      })
-    }
+                messages[gameId] = [];
 
-    if (result.method == 'join-random') {
-      var gameId = null;
-      let game = null;
-      let payLoad = null;
+                payLoad = {
+                    method: 'join-random',
+                    game: game,
+                }
 
-      // if there are existing games, randomly choose one
-      if (Object.keys(games).length > 0) {
-        var keys = Object.keys(games);
-        game = games[keys[ keys.length * Math.random() << 0]];
-        gameId = game.id;
+                // no games exist
+            } else {
+                payLoad = {
+                    method: 'error',
+                    message: 'No games are currently running. Create one instead.'
+                }
+            }
 
-        game?.clients?.push({
-          clientId,
-        })
-
-        messages[gameId] = [];
-
-        payLoad = {
-          method: 'join-random',
-          game: game,
+            const con = clients[clientId].connection;
+            con.send(JSON.stringify(payLoad))
         }
-        
-      // no games exist
-      } else {
-        payLoad = {
-          method: 'error',
-          message: 'No games are currently running. Create one instead.'
-        }
-      }
-      
-      const con = clients[clientId].connection;
-      con.send(JSON.stringify(payLoad))
-    }
-    
-  });
 
-  // generate a new clientId
-  const clientId = guid();
-  clients[clientId] = {
-    connection: connection,
-  };
+    });
 
-  const payLoad = {
-    method: 'connect',
-    clientId: clientId,
-  };
+    // generate a new clientId
+    const clientId = guid();
+    clients[clientId] = {
+        connection: connection,
+    };
 
-  // send back the client connect
-  connection.send(JSON.stringify(payLoad));
+    const payLoad = {
+        method: 'connect',
+        clientId: clientId,
+    };
+
+    // send back the client connect
+    connection.send(JSON.stringify(payLoad));
 
 });
 
 function S4() {
-  return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
 }
 
 // then to call it, plus stitch in '4' in the third group
 const guid = () =>
-  (
-    S4() +
-    S4() +
-    '-' +
-    S4() +
-    '-4' +
-    S4().substr(0, 3) +
-    '-' +
-    S4() +
-    '-' +
-    S4() +
-    S4() +
-    S4()
-  ).toLowerCase();
+    (
+        S4() +
+        S4() +
+        '-' +
+        S4() +
+        '-4' +
+        S4().substr(0, 3) +
+        '-' +
+        S4() +
+        '-' +
+        S4() +
+        S4() +
+        S4()
+    ).toLowerCase();
