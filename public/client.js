@@ -60,7 +60,7 @@ btnJoin.addEventListener('click', () => {
     if (checkInputs() == "error") {
         return;
     }
-
+    playerColour = playerColourInput.value;
     username = playerName.value;
     if (gameId == null) 
         gameId = txtGameId.value;
@@ -73,6 +73,8 @@ btnJoin.addEventListener('click', () => {
         gameId,
         colour: playerColour
     }
+
+    console.log(payLoad.gameId);
     ws.send(JSON.stringify(payLoad))
 })
 
@@ -128,7 +130,7 @@ ws.onmessage = (message) => {
         playerColour = playerColourInput.value;
         gameId = response.game.id;
         txtCurrGameId.innerText = `Current Game ID: ${gameId}`;
-        loadPlayer(playerColour);
+        drawPlayer(playerColour);
     }
 
     if (response.method === 'error') {
@@ -137,9 +139,9 @@ ws.onmessage = (message) => {
 
     if (response.method === 'join') {
         console.log(response.game)
-        txtCurrGameId.innerText = `Current Game ID: ${gameId}`;
+        txtCurrGameId.innerText = `Current Game ID: ${response.game.id}`;
         console.log(response.colour);
-        loadPlayer(playerColour);
+        drawPlayer(playerColour);
     }
 
     if (response.method === 'join-random') {

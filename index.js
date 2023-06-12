@@ -149,14 +149,14 @@ websocket.on('request', (request) => {
                 game = games[keys[ keys.length * Math.random() << 0]];
                 gameId = game.id;
 
+                console.log(gameId);
+
                 game?.clients?.push({
                     clientId,
                 })
 
-                messages[gameId] = [];
-
                 payLoad = {
-                    method: 'join-random',
+                    method: 'join',
                     game: game,
                 }
 
