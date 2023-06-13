@@ -4,7 +4,7 @@ let gameId = null;
 let playerColour = null;
 let username = null;
 let errorText = null;
-let playersonserver = [];
+let playersOnServer = [];
 let playerPosX = null;
 let playerPosY = null;
 let ws = new WebSocket("ws://localhost:8080");
@@ -22,6 +22,7 @@ const errorDisplay = document.getElementById("error");
 const chat = document.getElementById("chat");
 const playerName = document.getElementById("playerName");
 const playerColourInput = document.getElementById("playerColour");
+const playerList = document.getElementById("playerList");
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext("2d");
 canvas.style.border = "1px solid black";
@@ -48,9 +49,14 @@ txtGameId.addEventListener("keydown", () => {
 // })
 
 btnCreate.addEventListener('click', () => {
+    username = playerName.value;
+    playerColour = playerColourInput.value;
     const payLoad = {
         method: 'create',
-        clientId: clientId
+        username,
+        clientId,
+        colour: playerColour,
+        
     }
     ws.send(JSON.stringify(payLoad))
 })
@@ -128,9 +134,10 @@ ws.onmessage = (message) => {
     // create game
     if (response.method === 'create') {
         playerColour = playerColourInput.value;
+        username = username
         gameId = response.game.id;
         txtCurrGameId.innerText = `Current Game ID: ${gameId}`;
-        drawPlayer(playerColour);
+        // drawPlayer(playerColour);
     }
 
     if (response.method === 'error') {
@@ -138,10 +145,17 @@ ws.onmessage = (message) => {
     }
 
     if (response.method === 'join') {
-        console.log(response.game)
+        playersOnServer = response.game.clients;
         txtCurrGameId.innerText = `Current Game ID: ${response.game.id}`;
-        console.log(response.colour);
-        drawPlayer(playerColour);
+        for (let i = 0; i < playersOnServer.length; i++) {
+            console.log(playersOnServer[i].username);
+            drawAllPlayers();
+            playerList.innerText += `,  ${playersOnServer[i].username}`;
+        }
+    }
+    
+    if (response.method == 'update') {
+        console.log(response);
     }
 
     if (response.method === 'join-random') {
@@ -150,20 +164,22 @@ ws.onmessage = (message) => {
         txtCurrGameId.innerText = `Current Game ID: ${gameId}`;
     }
 }
+const drawAllPlayers = () => {
+    var offset = 50;
+    playersOnServer.forEach(p => {
+        drawPlayer(p, offset);
+        offset += 50;
+    });
+}
 
-const drawPlayer = (playerColour) => {
-    const X = canvas.width / 2;
-    const Y = canvas.height / 2;
+const drawPlayer = (player, offset) => {
     const radius = 45;
 
-    playerPosX = X;
-    playerPosY = Y;
-
     ctx.lineWidth = 3;
-    ctx.fillStyle = playerColour;
+    ctx.fillStyle = player.colour;
 
     ctx.beginPath();
-    ctx.arc(X, Y, radius, 0, 2 * Math.PI, false);
+    ctx.arc(player.position.x + offset, player.position.y, radius, 0, 2 * Math.PI, false);
     ctx.fill();
 }
 

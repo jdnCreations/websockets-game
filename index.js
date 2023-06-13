@@ -71,6 +71,7 @@ websocket.on('request', (request) => {
             const clientId = result.clientId;
             const colour = result.colour;
             const username = result.username;
+            const position = {x: 0, y: 0};
             const gameId = guid()
             games[gameId] = {
                 id: gameId,
@@ -79,13 +80,17 @@ websocket.on('request', (request) => {
 
             messages[gameId] = [];
 
-            const game = games[gameId]
+            const game = games[gameId];
+            console.log(`Username: ${username}`);
 
             game?.clients?.push({
                 clientId,
                 colour,
-                username
+                username,
+                position,
             })
+
+            console.log(game?.clients.length);
 
             const payLoad = {
                 method: 'create',
@@ -103,6 +108,8 @@ websocket.on('request', (request) => {
             const gameId = result.gameId;
             const game = games[gameId];
             const colour = result.colour;  
+            const username = result.username;
+            const position = {x: 0, y: 0};
 
             if (!game) {
                 const payLoad = {
@@ -126,8 +133,13 @@ websocket.on('request', (request) => {
 
             game?.clients?.push({
                 clientId,
+                colour,
+                username,
+                position,
             })
 
+            
+            console.log(game?.clients);
             const payLoad = {
                 method: 'join',
                 game: game
@@ -142,6 +154,10 @@ websocket.on('request', (request) => {
             var gameId = null;
             let game = null;
             let payLoad = null;
+            const clientId = result.clientId;
+            const colour = result.colour;  
+            const username = result.username;
+            const position = result.position;
 
             // if there are existing games, randomly choose one
             if (Object.keys(games).length > 0) {
@@ -149,10 +165,11 @@ websocket.on('request', (request) => {
                 game = games[keys[ keys.length * Math.random() << 0]];
                 gameId = game.id;
 
-                console.log(gameId);
-
                 game?.clients?.push({
                     clientId,
+                    colour,
+                    username,
+                    position,
                 })
 
                 payLoad = {
@@ -189,6 +206,21 @@ websocket.on('request', (request) => {
     connection.send(JSON.stringify(payLoad));
 
 });
+
+const loop = () => {
+    for (const gameId in games) {
+        const payLoad = {
+            method: 'update',
+            clients: games[gameId].clients
+        }
+        for (const i in games[gameId].clients) {
+            let clientId = games[gameId].clients[i].clientId;
+            clients[clientId].connection.send(JSON.stringify(payLoad));
+        }
+    }
+}
+
+setInterval(loop, 1000 / 30);
 
 function S4() {
     return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
